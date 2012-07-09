@@ -1,0 +1,15 @@
+2011-12-24
+1. slab allocator: check boundary
+
+2011-12-23
+1. Reduce log
+2. Improve index
+3. More blocks
+4. BerkeleyDB buffer size
+5. Blackbox testing
+6. Cache
+7. Stat querying port
+8. Sendback thread
+
+2011-12-06
+1. Assign thread will recv request then dispatch to worker threads
