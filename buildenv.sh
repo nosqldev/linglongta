@@ -163,10 +163,14 @@ if [ ! -z $1 ]
 then
     if [ $1 = '--install' ]
     then
-        gputs "--- INSTALL GNU Parallel ---"
         run_cmd "mkdir -p tmp"
-        run_cmd 'wget -P tmp http://mirrors.ispros.com.bd/gnu/parallel/parallel-20111222.tar.bz2'
         run_cmd "mkdir -p utils"
+
+        gputs "--- INSTALL GNU Parallel ---"
+        if [ ! -e tmp/parallel-20111222.tar.bz2 ]
+        then
+            run_cmd 'wget -P tmp http://mirrors.ispros.com.bd/gnu/parallel/parallel-20111222.tar.bz2'
+        fi
         run_cmd "cd tmp"
         run_cmd "tar xfvj parallel-20111222.tar.bz2"
         run_cmd "cd parallel-20111222"
@@ -176,7 +180,10 @@ then
 
         gputs "--- INSTALL UTHASH ---"
         run_cmd "cd $DEPLOY_ROOT_DIR"
-        run_cmd "wget -O tmp/uthash.tar.bz2 http://downloads.sourceforge.net/project/uthash/uthash/uthash-1.9.5/uthash-1.9.5.tar.bz2?r=http%3A%2F%2Futhash.sourceforge.net%2F&ts=1325312087&use_mirror=cdnetworks-kr-2"
+        if [ ! -e tmp/uthash.tar.bz2 ]
+        then
+            run_cmd "wget -O tmp/uthash.tar.bz2 http://downloads.sourceforge.net/project/uthash/uthash/uthash-1.9.5/uthash-1.9.5.tar.bz2?r=http%3A%2F%2Futhash.sourceforge.net%2F&ts=1325312087&use_mirror=cdnetworks-kr-2"
+        fi
         run_cmd "cd tmp"
         run_cmd "tar xfvj uthash.tar.bz2"
 
@@ -202,7 +209,10 @@ then
         gputs "--- INSTALL CUnit ---"
         run_cmd "cd $DEPLOY_ROOT_DIR"
         run_cmd "cd tmp"
-        run_cmd "wget -O Cunit.tar.bz2 http://downloads.sourceforge.net/project/cunit/CUnit/2.1-2/CUnit-2.1-2-src.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fcunit%2F&ts=1324818822&use_mirror=cdnetworks-kr-1"
+        if [ ! -e Cunit.tar.bz2 ]
+        then
+            run_cmd "wget -O Cunit.tar.bz2 http://downloads.sourceforge.net/project/cunit/CUnit/2.1-2/CUnit-2.1-2-src.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fcunit%2F&ts=1324818822&use_mirror=cdnetworks-kr-1"
+        fi
         run_cmd "tar xfvj Cunit.tar.bz2"
         run_cmd "cd CUnit-2.1-2"
         run_cmd "./configure --prefix=$DEPLOY_ROOT_DIR/utils"
