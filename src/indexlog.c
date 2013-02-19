@@ -24,8 +24,11 @@
 #include "crc32.h"
 #include "indexlog.h"
 
+#ifndef LOG_BUF_HEADER_SIZE
+    #define LOG_BUF_HEADER_SIZE (sizeof(uint32_t) *2)
+#endif
 #ifndef LOG_BUF_SIZE
-    #define LOG_BUF_SIZE (1024*8 - sizeof(uint32_t) * 2)
+    #define LOG_BUF_SIZE (1024*8 - LOG_BUF_HEADER_SIZE)
 #endif /* ! LOG_BUF_SIZE */
 #define MAGIC_HEADER (0x1d810900) /* 1d8109 = idxlog, version: 00 */
 #define INDEX_LOG_ITEM_SIZE (sizeof(enum op_type_t) + sizeof(union index_key_t) + sizeof(struct index_value_t))
@@ -208,8 +211,8 @@ sync_index_log(struct index_logger_s *il)
     il->storing_buffer->crc32sum = crc32_calc(il->storing_buffer->buf_ptr, il->storing_buffer->count * INDEX_LOG_ITEM_SIZE);
     nwrite = write(il->fd,
                    (void*)il->storing_buffer,
-                   il->storing_buffer->count * INDEX_LOG_ITEM_SIZE + sizeof(uint32_t) * 2);
-    if (nwrite == (ssize_t)(il->storing_buffer->count * INDEX_LOG_ITEM_SIZE + sizeof(uint32_t) * 2))
+                   il->storing_buffer->count * INDEX_LOG_ITEM_SIZE + LOG_BUF_HEADER_SIZE);
+    if (nwrite == (ssize_t)(il->storing_buffer->count * INDEX_LOG_ITEM_SIZE + LOG_BUF_HEADER_SIZE))
     {
         fsync(il->fd);
         retval = RET_SUCCESS;

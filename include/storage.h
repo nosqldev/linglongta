@@ -18,7 +18,7 @@
 #include "indexlog.h"
 
 #define MAX_FREE_SLOTS (100 * 1000)
-#define KEY_LEN (32)
+#define KEY_LEN (16)
 
 #define DATA_SECTION_POS (sizeof(struct block_file_t) - __offset_of(struct block_file_t, block_size))
 #define SLOTS_SECTION_POS (__offset_of(struct block_file_t, free_slots_offset) - __offset_of(struct block_file_t, block_size))
@@ -48,7 +48,9 @@ typedef struct block_file_t
 typedef union index_key_t
 {
     unsigned char key[KEY_LEN];
-    uint64_t key_num;
+    struct {
+        uint64_t qword[KEY_LEN / sizeof(uint64_t)];
+    } uint64_array;
 } index_key_t;
 
 typedef struct index_value_t

@@ -11,6 +11,9 @@
 
 #include "storage.h"
 
+#include "bobhash.h"
+#include "mhash.h"
+
 /* TODO
  * 1. interface - DONE
  * 2. lock - HALF DONE(not thread-safe) - DONE
@@ -57,6 +60,17 @@ STATIC_MODIFIER size_t block_type_count;
 #define EX_UNLOCK_IDX(_bsp) do { rwlock_unwrlock(_bsp->index_lock); } while (0)
 #define SH_LOCK_IDX(_bsp) do { rwlock_rdlock(_bsp->index_lock); } while (0)
 #define SH_UNLOCK_IDX(_bsp) do { rwlock_unrdlock(_bsp->index_lock); } while (0)
+
+static inline void
+calc_hash_key(const void * restrict src, size_t src_len, index_key_t * restrict dest)
+{
+    uint64_t bobhash_value, mhash_value;
+
+    bobhash_value = bobhash64(src, src_len);
+    mhash_value   = MurmurHash64A(src, src_len);
+    dest->uint64_array.qword[0] = bobhash_value;
+    dest->uint64_array.qword[1] = mhash_value;
+}
 
 STATIC_MODIFIER int do_delete_block(struct bucket_storage_t *bsp, struct index_value_t *iv, void *key, size_t key_size);
 
@@ -249,9 +263,9 @@ append_block(struct bucket_storage_t *bsp, size_t block_id, void *key, size_t ke
         ++ fh->block_cnt;
         sync_data_file_header(block_id, false);
         sync_data_file(block_id, data, data_size, offset, false);
-        log_notice("write free slot %zu.dat, free_slot = %zu, key = 0x%lX, data_size = %zu, offset = %zu, data crc32 = %u",
+        log_notice("write free slot %zu.dat, free_slot = %zu, high key = 0x%lX, data_size = %zu, offset = %zu, data crc32 = %u",
                 block_size_array[block_id], fh->free_slots_cnt,
-                index_key.key_num, data_size, offset, crc32_value);
+                index_key.uint64_array.qword[1], data_size, offset, crc32_value);
     }
     else
     {
@@ -401,8 +415,8 @@ update_block(struct bucket_storage_t *bsp, void *key, size_t key_size, void *dat
             }
             else
             {
-                snprintf(log_buf, sizeof log_buf, "Modify %zu.dat successfully, key = 0x%lX, data_size = %zu, offset = %zu",
-                         block_size_array[iv->block_id], index_key.key_num, data_size, iv->offset);
+                snprintf(log_buf, sizeof log_buf, "Modify %zu.dat successfully, high key = 0x%lX, data_size = %zu, offset = %zu",
+                         block_size_array[iv->block_id], index_key.uint64_array.qword[1], data_size, iv->offset);
                 goto outlet;
             }
         }
@@ -427,8 +441,8 @@ update_block(struct bucket_storage_t *bsp, void *key, size_t key_size, void *dat
             }
             else
             {
-                snprintf(log_buf, sizeof log_buf, "Move records to %zu.dat successfully, key = 0x%lX, data_size = %zu",
-                         block_size_array[iv->block_id], index_key.key_num, data_size);
+                snprintf(log_buf, sizeof log_buf, "Move records to %zu.dat successfully, high key = 0x%lX, data_size = %zu",
+                         block_size_array[iv->block_id], index_key.uint64_array.qword[1], data_size);
                 goto outlet;
             }
         }
@@ -452,8 +466,8 @@ update_block(struct bucket_storage_t *bsp, void *key, size_t key_size, void *dat
         }
         else
         {
-            snprintf(log_buf, sizeof log_buf, "Append %zu.dat successfully, key = 0x%lX, data_size = %zu",
-                     block_size_array[new_block_id], index_key.key_num, data_size);
+            snprintf(log_buf, sizeof log_buf, "Append %zu.dat successfully, high key = 0x%lX, data_size = %zu",
+                     block_size_array[new_block_id], index_key.uint64_array.qword[1], data_size);
         }
     }
     else
